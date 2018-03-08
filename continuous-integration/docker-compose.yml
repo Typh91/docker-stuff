@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  
+  jenkins:
+    image: jenkins/jenkins:lts
+    volumes:
+      - /opt/jenkins:/var/jenkins_home
+    environment:
+      - JENKINS_OPTS: --prefix=/jenkins
+      - JAVA_OPTS: -Dhttp.proxyHost=172.16.236.20 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=172.16.236.20 -Dhttps.proxyPort=8080 -Dhttp.nonProxyHosts=*.mmdd.indra.es|172.22.197.* -Dhttps.nonProxyHosts=*.mmdd.indra.es|172.22.197.
+  
+  sonar:
+    image: sonarqube
+    volumes:
+      - /opt/sonarqube/conf:/opt/sonarqube/conf
+      - /opt/sonarqube/extensions:/opt/sonarqube/extensions
+      - /opt/sonarqube/data:/opt/sonarqube/data
+    environment:
+      - SONARQUBE_JDBC_USERNAME: sonarqube
+      - SONARQUBE_JDBC_PASSWORD: des_SONAR57
+      - SONARQUBE_JDBC_URL: jdbc:mysql://172.28.241.23:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&useSSL=false
+    entrypoint: -Dsonar.web.context=/sonar
+
+  nginx_proxy:
+    image: nginx
+    volumes:
+      - /opt/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 8080:8080/tcp
