@@ -1,15 +1,16 @@
 version: '2'
 
 services:
-  
+
   jenkins:
     image: jenkins/jenkins:lts
     volumes:
       - /opt/jenkins:/var/jenkins_home
     environment:
-      - JENKINS_OPTS: --prefix=/jenkins
-      - JAVA_OPTS: -Dhttp.proxyHost=172.16.236.20 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=172.16.236.20 -Dhttps.proxyPort=8080 -Dhttp.nonProxyHosts=*.mmdd.indra.es|172.22.197.* -Dhttps.nonProxyHosts=*.mmdd.indra.es|172.22.197.
-  
+      - JENKINS_OPTS="--prefix=/jenkins"
+      - JAVA_OPTS="-Dhttp.proxyHost=xxxxx -Dhttp.proxyPort=xxxx -Dhttps.proxyHost=xxxx -Dhttps.proxyPort=xxxx
+ -Dhttp.nonProxyHosts=xxxxx -Dhttps.nonProxyHosts=xxxx"
+
   sonar:
     image: sonarqube
     volumes:
@@ -17,14 +18,32 @@ services:
       - /opt/sonarqube/extensions:/opt/sonarqube/extensions
       - /opt/sonarqube/data:/opt/sonarqube/data
     environment:
-      - SONARQUBE_JDBC_USERNAME: sonarqube
-      - SONARQUBE_JDBC_PASSWORD: des_SONAR57
-      - SONARQUBE_JDBC_URL: jdbc:mysql://172.28.241.23:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatements=true&useConfigs=maxPerformance&useSSL=false
-    entrypoint: -Dsonar.web.context=/sonar
+      - http_proxy
+      - SONARQUBE_JDBC_USERNAME=sonarqube
+      - SONARQUBE_JDBC_PASSWORD=xxxxx
+      - SONARQUBE_JDBC_URL=jdbc:mysql://xxxxxx:3306/sonar?useUnicode=true&characterEncoding=utf8&rewriteBatchedStatemen
+ts=true&useConfigs=maxPerformance&useSSL=false
+    entrypoint: ./bin/run.sh -Dsonar.web.context=/sonar
+
+  nexus:
+    image: sonatype/nexus3
+    volumes:
+      - /opt/nexus-docker:/nexus-data
+    environment:
+      - http_proxy
+      - https_proxy
+      - NEXUS_CONTEXT=nexus
 
   nginx_proxy:
     image: nginx
     volumes:
       - /opt/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /opt/ssl/xxxxx.cert:/xxxxx.cert
+      - /opt/ssl/xxxxxx.key:/xxxxx.key
     ports:
       - 8080:8080/tcp
+      - 443:443/tcp
+    depends_on:
+      - jenkins
+      - sonar
+      - nexus
